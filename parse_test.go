@@ -1,15 +1,18 @@
 package goenv
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
 
 func TestParseInput(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    []byte
-		expected map[string]string
+		name          string
+		input         []byte
+		expected      map[string]string
+		shouldFail    bool
+		expectedError error
 	}{
 		{
 			name: "Parse nicely formatted input",
@@ -99,17 +102,70 @@ func TestParseInput(t *testing.T) {
 				"API_BASE_URL": "https://example.com/api",
 			},
 		},
+		{
+			name: "Parse input empty lines",
+			input: []byte(` 
+
+			ENVIRONMENT="development"
+
+			API_BASE_URL="https://example.com/api"
+
+			`),
+			expected: map[string]string{
+				"ENVIRONMENT":  "development",
+				"API_BASE_URL": "https://example.com/api",
+			},
+		},
+		{
+			name: "Parse input ending with empty line",
+			input: []byte(` 
+			ENVIRONMENT="development"
+			API_BASE_URL="https://example.com/api"
+
+			`),
+			expected: map[string]string{
+				"ENVIRONMENT":  "development",
+				"API_BASE_URL": "https://example.com/api",
+			},
+		},
+		{
+			name: "Parse input with missing delimeter",
+			input: []byte(` 
+			ENVIRONMENT="development"
+			API_BASE_URL:"https://example.com/api"
+			`),
+			shouldFail:    true,
+			expectedError: fmt.Errorf("malformed line: Missing '=' in environment variable"),
+		},
+		{
+			name: "Parse input with malformed string value",
+			input: []byte(` 
+			ENVIRONMENT="development"
+			API_BASE_URL="https://example.com/api
+			`),
+			shouldFail:    true,
+			expectedError: fmt.Errorf("malformed value: Missing end quote '\"' in environment variable"),
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := parseInput(tt.input)
-			if err != nil {
-				t.Errorf("parseInput() = failed with error: %v", err)
-			}
+			if tt.shouldFail {
+				if err == nil {
+					t.Errorf("parseInput() = did not fail when expected.")
+				}
+				if err.Error() != tt.expectedError.Error() {
+					t.Errorf("parseInput() = got error:'%s', but expected '%s'", err.Error(), tt.expectedError.Error())
+				}
+			} else {
+				if err != nil {
+					t.Errorf("parseInput() = failed with error: %v", err)
+				}
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("parseInput() = %v, want %v", got, tt.expected)
+				if !reflect.DeepEqual(got, tt.expected) {
+					t.Errorf("parseInput() = %v, want %v", got, tt.expected)
+				}
 			}
 		})
 	}
