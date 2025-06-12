@@ -43,6 +43,7 @@ func readFile(filename string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 
 	var buffer bytes.Buffer
 	_, err = io.Copy(&buffer, f)
