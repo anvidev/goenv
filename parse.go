@@ -25,12 +25,12 @@ func parseInput(src []byte) (map[string]string, error) {
 
 		key, rest, err := findKey(rest)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("malformed line: %s", err.Error())
 		}
 
 		value, rest, err := findValue(rest)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("malformed value: %s", err.Error())
 		}
 
 		srcMap[key] = value
@@ -136,6 +136,9 @@ func findLineStart(src []byte) []byte {
 	}
 
 	src = src[nonSpaceIndex:]
+	if src[0] == '\n' {
+		return findLineStart(src[1:])
+	}
 	if src[0] != '#' {
 		return src
 	}
