@@ -109,7 +109,7 @@ func TestParseInput(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("GetString() = %v, want %v", got, tt.expected)
+				t.Errorf("parseInput() = %v, want %v", got, tt.expected)
 			}
 		})
 	}
