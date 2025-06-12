@@ -10,6 +10,9 @@ go get github.com/anvidev/goenv
 
 ## Basic Usage
 
+> [!NOTE]
+> Make sure to load your environment variables. See section [Loading environment variables](#loading-environment-variables) for more.
+
 ```go
 package main
 
@@ -19,9 +22,6 @@ import (
 )
 
 func main() {
-    // Make sure to load your environment variables first.
-    // See section "Loading environment variables"
-
     // Get environment variables with fallbacks
     host := goenv.String("HOST", "localhost")
     port := goenv.Int("PORT", 8080)
@@ -82,9 +82,9 @@ func main() {
 > [!CAUTION]
 > Running `Load` multiple times with different files might override values for duplicate keys
 
-The `Load` function will by default try to load ".env".
+`Load` will by default try to load ".env".
 
-However you can also provide file paths to the `Load` function, to load multiple files or from a specific location.
+However you can also provide file path(s) to `Load`, to load multiple files or from a specific location.
 
 The code would then look like this:
 
