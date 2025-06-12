@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+var keys []string = []string{"TEST_STRING", "TEST_INT", "TEST_BOOL", "TEST_EXISTING", "TEST_MISSING",
+	"TEST_TAGGED", "DB_HOST", "DB_PORT", "APP_NAME", "TEST_INT8", "TEST_INT64",
+	"TEST_UINT", "TEST_FLOAT32", "TEST_FLOAT64", "TEST_INVALID_INT",
+	"TEST_BOOL_1", "TEST_BOOL_0", "TEST_BOOL_TRUE", "TEST_BOOL_FALSE",
+	"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR",
+}
+
 func TestStruct(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -61,7 +68,7 @@ func TestStruct(t *testing.T) {
 			},
 			input: &struct {
 				TaggedField   string `goenv:"TEST_TAGGED"`
-				UntaggedField string 
+				UntaggedField string
 			}{},
 			fail: false,
 			check: func(t *testing.T, input any) {
@@ -280,13 +287,8 @@ func TestStruct(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			for _, key := range []string{
-				"TEST_STRING", "TEST_INT", "TEST_BOOL", "TEST_EXISTING", "TEST_MISSING",
-				"TEST_TAGGED", "DB_HOST", "DB_PORT", "APP_NAME", "TEST_INT8", "TEST_INT64",
-				"TEST_UINT", "TEST_FLOAT32", "TEST_FLOAT64", "TEST_INVALID_INT",
-				"TEST_BOOL_1", "TEST_BOOL_0", "TEST_BOOL_TRUE", "TEST_BOOL_FALSE",
-				"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR",
-			} {
+			for _, key := range keys {
+				// unset keys before tests to be sure
 				os.Unsetenv(key)
 			}
 
@@ -295,13 +297,7 @@ func TestStruct(t *testing.T) {
 			}
 
 			t.Cleanup(func() {
-				for _, key := range []string{
-					"TEST_STRING", "TEST_INT", "TEST_BOOL", "TEST_EXISTING", "TEST_MISSING",
-					"TEST_TAGGED", "DB_HOST", "DB_PORT", "APP_NAME", "TEST_INT8", "TEST_INT64",
-					"TEST_UINT", "TEST_FLOAT32", "TEST_FLOAT64", "TEST_INVALID_INT",
-					"TEST_BOOL_1", "TEST_BOOL_0", "TEST_BOOL_TRUE", "TEST_BOOL_FALSE",
-					"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR",
-				} {
+				for _, key := range keys {
 					os.Unsetenv(key)
 				}
 			})
@@ -310,14 +306,14 @@ func TestStruct(t *testing.T) {
 
 			if tt.fail {
 				if err == nil {
-					t.Errorf("Struct() error = nil, wantErr %v", tt.fail)
+					t.Errorf("Struct() error = nil, fail %v", tt.fail)
 					return
 				}
 				return
 			}
 
 			if err != nil {
-				t.Errorf("Struct() error = %v, wantErr %v", err, tt.fail)
+				t.Errorf("Struct() error = %v, fail %v", err, tt.fail)
 				return
 			}
 
