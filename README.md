@@ -54,7 +54,7 @@ func LoadConfig() Config {
 
 ## Loading environment variables
 
-To load your environment variables, simply place the following code in your main function
+To load your environment variables, simply place the following code in your main function.
 
 ```go
 
@@ -79,9 +79,12 @@ func main() {
 
 ```
 
-The Load function will by default try to load ".env".
+> [!CAUTION]
+> Running `Load` multiple times with different files might override values for duplicate keys
 
-However you can also provide file paths to the Load function, to load multiple files or from a specific location.
+The `Load` function will by default try to load ".env".
+
+However you can also provide file paths to the `Load` function, to load multiple files or from a specific location.
 
 The code would then look like this:
 
@@ -101,7 +104,7 @@ The code would then look like this:
 - `MustString(key string) string` - Get required string (panics if empty/unset)
 - `Load(filenames ...string) error` - Loads 1 or more files in the environment. If no file is provided ".env" is used.
 
-All functions (except Load and MustString) return the fallback value if the environment variable is not set or cannot be parsed.
+All functions (except `Load` and `MustString`) return the fallback value if the environment variable is not set or cannot be parsed.
 
 ## License
 
