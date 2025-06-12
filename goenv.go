@@ -68,3 +68,13 @@ func MustString(k string) string {
 	}
 	return v
 }
+
+// Loads the content of 1 or more files in to the current environment.
+//
+// If no files are provided, Load defaults to ".env".
+//
+// If multiple files are provided the first file is loaded fully,
+// while only keys not already in the environment are loaded for the remaining files.
+func Load(filenames ...string) error {
+	return loadFiles(filenames)
+}
