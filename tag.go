@@ -204,5 +204,5 @@ func parseTimeValue(value string) (time.Time, error) {
 		}
 	}
 
-	return time.Time{}, fmt.Errorf("unknown go format")
+	return time.Time{}, fmt.Errorf("unknown go time format: %s", value)
 }
