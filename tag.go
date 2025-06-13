@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 // Struct populates a struct with values from environment variables.
@@ -20,6 +21,8 @@ import (
 //   - uint, uint8, uint16, uint32, uint64
 //   - float32, float64
 //   - bool
+//   - time.Duration
+//   - time.Time (uses Golang's time formats)
 //   - nested structs (processed recursively)
 //
 // Struct tag format:
@@ -59,7 +62,7 @@ func Struct(v any) error {
 			continue
 		}
 
-		if field.Kind() == reflect.Struct {
+		if field.Kind() == reflect.Struct && field.Type() != reflect.TypeOf(time.Time{}) {
 			if err := Struct(field.Addr().Interface()); err != nil {
 				return fmt.Errorf("failed to process nested struct %s: %w", val.Type().Field(i).Name, err)
 			}
@@ -86,36 +89,75 @@ func Struct(v any) error {
 }
 
 func setFieldValue(field reflect.Value, value string) error {
-	switch field.Kind() {
-	case reflect.String:
+	if field.Type() == reflect.TypeOf(time.Time{}) {
+		fmt.Printf("time value is: %s\n", value)
+		timeVal, err := parseTimeValue(value)
+		if err != nil {
+			return fmt.Errorf("cannot parse %q as time.Time: %w", value, err)
+		}
+		field.Set(reflect.ValueOf(timeVal))
+		return nil
+	}
+
+	switch field.Interface().(type) {
+	case string:
 		field.SetString(value)
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+	case int, int8, int16, int32, int64:
 		intVal, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as int: %w", value, err)
 		}
 		field.SetInt(intVal)
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case uint, uint8, uint16, uint32, uint64:
 		uintVal, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as uint: %w", value, err)
 		}
 		field.SetUint(uintVal)
-	case reflect.Float32, reflect.Float64:
+	case float32, float64:
 		floatVal, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as float: %w", value, err)
 		}
 		field.SetFloat(floatVal)
-	case reflect.Bool:
+	case bool:
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as bool: %w", value, err)
 		}
 		field.SetBool(boolVal)
+	case time.Duration:
+		durVal, err := time.ParseDuration(value)
+		if err != nil {
+			return fmt.Errorf("cannot parse %q as time.Duration: %w", value, err)
+		}
+		field.Set(reflect.ValueOf(durVal))
 	default:
 		return fmt.Errorf("unsupported field type: %s", field.Kind())
 	}
 
 	return nil
+}
+
+func parseTimeValue(value string) (time.Time, error) {
+	formats := []string{
+		time.RFC3339,
+		time.RFC3339Nano,
+		time.DateTime,
+		time.DateOnly,
+		time.TimeOnly,
+		time.Kitchen,
+		time.Stamp,
+		time.StampMilli,
+		time.StampMicro,
+		time.StampNano,
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, value); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unknown go format")
 }

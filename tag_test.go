@@ -3,13 +3,14 @@ package goenv
 import (
 	"os"
 	"testing"
+	"time"
 )
 
 var keys []string = []string{"TEST_STRING", "TEST_INT", "TEST_BOOL", "TEST_EXISTING", "TEST_MISSING",
 	"TEST_TAGGED", "DB_HOST", "DB_PORT", "APP_NAME", "TEST_INT8", "TEST_INT64",
 	"TEST_UINT", "TEST_FLOAT32", "TEST_FLOAT64", "TEST_INVALID_INT",
 	"TEST_BOOL_1", "TEST_BOOL_0", "TEST_BOOL_TRUE", "TEST_BOOL_FALSE",
-	"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR",
+	"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR", "TEST_DURATION", "TEST_TIME",
 }
 
 func TestStruct(t *testing.T) {
@@ -143,22 +144,28 @@ func TestStruct(t *testing.T) {
 				os.Setenv("TEST_UINT", "42")
 				os.Setenv("TEST_FLOAT32", "3.14")
 				os.Setenv("TEST_FLOAT64", "2.718281828")
+				os.Setenv("TEST_DURATION", "5h")
+				os.Setenv("TEST_TIME", "1992-06-26")
 			},
 			input: &struct {
-				Int8Field    int8    `goenv:"TEST_INT8"`
-				Int64Field   int64   `goenv:"TEST_INT64"`
-				UintField    uint    `goenv:"TEST_UINT"`
-				Float32Field float32 `goenv:"TEST_FLOAT32"`
-				Float64Field float64 `goenv:"TEST_FLOAT64"`
+				Int8Field     int8          `goenv:"TEST_INT8"`
+				Int64Field    int64         `goenv:"TEST_INT64"`
+				UintField     uint          `goenv:"TEST_UINT"`
+				Float32Field  float32       `goenv:"TEST_FLOAT32"`
+				Float64Field  float64       `goenv:"TEST_FLOAT64"`
+				DurationField time.Duration `goenv:"TEST_DURATION"`
+				TimeField     time.Time     `goenv:"TEST_TIME"`
 			}{},
 			fail: false,
 			check: func(t *testing.T, input any) {
 				s := input.(*struct {
-					Int8Field    int8    `goenv:"TEST_INT8"`
-					Int64Field   int64   `goenv:"TEST_INT64"`
-					UintField    uint    `goenv:"TEST_UINT"`
-					Float32Field float32 `goenv:"TEST_FLOAT32"`
-					Float64Field float64 `goenv:"TEST_FLOAT64"`
+					Int8Field     int8          `goenv:"TEST_INT8"`
+					Int64Field    int64         `goenv:"TEST_INT64"`
+					UintField     uint          `goenv:"TEST_UINT"`
+					Float32Field  float32       `goenv:"TEST_FLOAT32"`
+					Float64Field  float64       `goenv:"TEST_FLOAT64"`
+					DurationField time.Duration `goenv:"TEST_DURATION"`
+					TimeField     time.Time     `goenv:"TEST_TIME"`
 				})
 				if s.Int8Field != 127 {
 					t.Errorf("Int8Field = %v, want %v", s.Int8Field, 127)
@@ -174,6 +181,9 @@ func TestStruct(t *testing.T) {
 				}
 				if s.Float64Field != 2.718281828 {
 					t.Errorf("Float64Field = %v, want %v", s.Float64Field, 2.718281828)
+				}
+				if s.TimeField != time.Date(1992, 06, 26, 0, 0, 0, 0, time.UTC) {
+					t.Errorf("TimeField = %v, want %v", s.TimeField, time.Date(1992, 06, 26, 0, 0, 0, 0, time.UTC))
 				}
 			},
 		},
