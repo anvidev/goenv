@@ -58,23 +58,24 @@ type tagConfig struct {
 func Struct(v any) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Pointer {
-		return fmt.Errorf("value must be a pointer to a struct")
+		return fmt.Errorf("goenv - expected pointer to struct")
 	}
 
 	val = val.Elem()
 	if val.Kind() != reflect.Struct {
-		return fmt.Errorf("value must be a pointer to a struct")
+		return fmt.Errorf("goenv - expected pointer to struct")
 	}
 
 	for i := range val.NumField() {
 		field := val.Field(i)
+		fieldName := val.Type().Field(i).Name
 		if !field.CanSet() {
 			continue
 		}
 
 		if field.Kind() == reflect.Struct && field.Type() != reflect.TypeOf(time.Time{}) {
 			if err := Struct(field.Addr().Interface()); err != nil {
-				return fmt.Errorf("failed to process nested struct %s: %w", val.Type().Field(i).Name, err)
+				return err
 			}
 			continue
 		}
@@ -86,13 +87,13 @@ func Struct(v any) error {
 
 		tagConfig, err := parseTag(tag)
 		if err != nil {
-			return fmt.Errorf("failed to parse goenv tag: %w", err)
+			return fmt.Errorf("goenv - error on field %s: %s", fieldName, err.Error())
 		}
 
 		value, found := os.LookupEnv(tagConfig.key)
 		if !found {
 			if tagConfig.required {
-				return fmt.Errorf("environment variable %s is not defined", tagConfig.key)
+				return fmt.Errorf("goenv - error on field %s: missing required env var", fieldName)
 			} else if tagConfig.hasDefault {
 				value = tagConfig.defaultValue
 			}
@@ -100,7 +101,7 @@ func Struct(v any) error {
 		}
 
 		if err := setFieldValue(field, value); err != nil {
-			return fmt.Errorf("failed to set %s environment variable: %w", tagConfig.key, err)
+			return fmt.Errorf("goenv - error on field %s: %s", fieldName, err.Error())
 		}
 	}
 
@@ -115,7 +116,7 @@ func parseTag(tag string) (tagConfig, error) {
 	}
 
 	if config.key == "" {
-		return tagConfig{}, fmt.Errorf("environment variable key must be set")
+		return tagConfig{}, fmt.Errorf("empty env var key")
 	}
 
 	for _, part := range parts[1:] {
@@ -130,7 +131,7 @@ func parseTag(tag string) (tagConfig, error) {
 	}
 
 	if config.hasDefault && config.required {
-		return tagConfig{}, fmt.Errorf("field %s cannot be both required and have a default value", config.key)
+		return tagConfig{}, fmt.Errorf("cannot be both required and have default: %s", config.key)
 	}
 
 	return config, nil
@@ -143,42 +144,42 @@ func setFieldValue(field reflect.Value, value string) error {
 	case int, int8, int16, int32, int64:
 		intVal, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return fmt.Errorf("cannot parse %q as int: %w", value, err)
+			return fmt.Errorf("invalid int value %q", value)
 		}
 		field.SetInt(intVal)
 	case uint, uint8, uint16, uint32, uint64:
 		uintVal, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
-			return fmt.Errorf("cannot parse %q as uint: %w", value, err)
+			return fmt.Errorf("invalid uint value %q", value)
 		}
 		field.SetUint(uintVal)
 	case float32, float64:
 		floatVal, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return fmt.Errorf("cannot parse %q as float: %w", value, err)
+			return fmt.Errorf("invalid float value %q", err)
 		}
 		field.SetFloat(floatVal)
 	case bool:
 		boolVal, err := strconv.ParseBool(value)
 		if err != nil {
-			return fmt.Errorf("cannot parse %q as bool: %w", value, err)
+			return fmt.Errorf("invalid bool value %q", err)
 		}
 		field.SetBool(boolVal)
 	case time.Duration:
 		durVal, err := time.ParseDuration(value)
 		if err != nil {
-			return fmt.Errorf("cannot parse %q as time.Duration: %w", value, err)
+			return fmt.Errorf("invalid duration value %q", value)
 		}
 		field.Set(reflect.ValueOf(durVal))
 	case time.Time:
 		timeVal, err := parseTimeValue(value)
 		if err != nil {
-			return fmt.Errorf("cannot parse %q as time.Time: %w", value, err)
+			return fmt.Errorf("invalid time value %q", value)
 		}
 		field.Set(reflect.ValueOf(timeVal))
 		return nil
 	default:
-		return fmt.Errorf("unsupported field type: %s", field.Kind())
+		return fmt.Errorf("unsupported field type %s", field.Kind())
 	}
 
 	return nil
@@ -204,5 +205,5 @@ func parseTimeValue(value string) (time.Time, error) {
 		}
 	}
 
-	return time.Time{}, fmt.Errorf("unknown go time format: %s", value)
+	return time.Time{}, fmt.Errorf("unknown time format: %s", value)
 }
