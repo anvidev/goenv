@@ -1,6 +1,7 @@
 package goenv
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -10,7 +11,7 @@ var keys []string = []string{"TEST_STRING", "TEST_INT", "TEST_BOOL", "TEST_EXIST
 	"TEST_TAGGED", "DB_HOST", "DB_PORT", "APP_NAME", "TEST_INT8", "TEST_INT64",
 	"TEST_UINT", "TEST_FLOAT32", "TEST_FLOAT64", "TEST_INVALID_INT",
 	"TEST_BOOL_1", "TEST_BOOL_0", "TEST_BOOL_TRUE", "TEST_BOOL_FALSE",
-	"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR", "TEST_DURATION", "TEST_TIME",
+	"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR", "TEST_DURATION", "TEST_TIME", "TEST_MISSING_DEFAULT",
 }
 
 func TestStruct(t *testing.T) {
@@ -52,13 +53,60 @@ func TestStruct(t *testing.T) {
 			},
 		},
 		{
-			name: "Struct with missing environment variable",
+			name: "Struct with missing optional environment variable",
 			setup: func() {
 				os.Setenv("TEST_EXISTING", "value")
 			},
 			input: &struct {
 				ExistingField string `goenv:"TEST_EXISTING"`
 				MissingField  string `goenv:"TEST_MISSING"`
+			}{},
+			fail: false,
+			check: func(t *testing.T, input any) {
+				s := input.(*struct {
+					ExistingField string `goenv:"TEST_EXISTING"`
+					MissingField  string `goenv:"TEST_MISSING"`
+				})
+				if s.ExistingField != "value" {
+					t.Errorf("ExistingField = %v, want %v", s.ExistingField, "value")
+				}
+				if s.MissingField != "" {
+					t.Errorf("MissingFiled = %v, want %v", s.MissingField, "")
+				}
+			},
+		},
+		{
+			name: "Struct with missing optional environment variable with a default",
+			setup: func() {
+				os.Setenv("TEST_EXISTING", "value")
+			},
+			input: &struct {
+				ExistingField string `goenv:"TEST_EXISTING"`
+				MissingField  string `goenv:"TEST_MISSING_DEFAULT,default=defaultvalue"`
+			}{},
+			fail: false,
+			check: func(t *testing.T, input any) {
+				s := input.(*struct {
+					ExistingField string `goenv:"TEST_EXISTING"`
+					MissingField  string `goenv:"TEST_MISSING_DEFAULT,default=defaultvalue"`
+				})
+				fmt.Printf("input is: %+v\n", s)
+				if s.ExistingField != "value" {
+					t.Errorf("ExistingField = %v, want %v", s.ExistingField, "value")
+				}
+				if s.MissingField != "defaultvalue" {
+					t.Errorf("MissingField = %v, want %v", s.MissingField, "defaultvalue")
+				}
+			},
+		},
+		{
+			name: "Struct with missing required environment variable",
+			setup: func() {
+				os.Setenv("TEST_EXISTING", "value")
+			},
+			input: &struct {
+				ExistingField string `goenv:"TEST_EXISTING"`
+				MissingField  string `goenv:"TEST_MISSING,required"`
 			}{},
 			fail: true,
 		},

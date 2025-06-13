@@ -5,8 +5,16 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
+
+type tagConfig struct {
+	key          string
+	required     bool
+	defaultValue string
+	hasDefault   bool
+}
 
 // Struct populates a struct with values from environment variables.
 // It uses reflection to iterate through struct fields and populates them
@@ -74,23 +82,60 @@ func Struct(v any) error {
 			continue
 		}
 
-		env, found := os.LookupEnv(tag)
-		// TODO: support fallback values in future or if field is required
-		if !found {
-			return fmt.Errorf("environment variable %s is not defined", tag)
+		tagConfig, err := parseTag(tag)
+		if err != nil {
+			return fmt.Errorf("failed to parse goenv tag: %w", err)
 		}
 
-		if err := setFieldValue(field, env); err != nil {
-			return fmt.Errorf("failed to set %s environment variable: %w", tag, err)
+		value, found := os.LookupEnv(tagConfig.key)
+		if !found {
+			if tagConfig.required {
+				return fmt.Errorf("environment variable %s is not defined", tagConfig.key)
+			} else if tagConfig.hasDefault {
+				value = tagConfig.defaultValue
+			}
+			// env is optional with no default
+		}
+
+		if err := setFieldValue(field, value); err != nil {
+			return fmt.Errorf("failed to set %s environment variable: %w", tagConfig.key, err)
 		}
 	}
 
 	return nil
 }
 
+func parseTag(tag string) (tagConfig, error) {
+	parts := strings.Split(tag, ",")
+
+	config := tagConfig{
+		key: strings.TrimSpace(parts[0]),
+	}
+
+	if config.key == "" {
+		return tagConfig{}, fmt.Errorf("environment variable key must be set")
+	}
+
+	for _, part := range parts[1:] {
+		part := strings.TrimSpace(part)
+
+		if part == "required" {
+			config.required = true
+		} else if strings.HasPrefix(part, "default=") {
+			config.defaultValue = strings.TrimPrefix(part, "default=")
+			config.hasDefault = true
+		}
+	}
+
+	if config.hasDefault && config.required {
+		return tagConfig{}, fmt.Errorf("field %s cannot be both required and have a default value", config.key)
+	}
+
+	return config, nil
+}
+
 func setFieldValue(field reflect.Value, value string) error {
 	if field.Type() == reflect.TypeOf(time.Time{}) {
-		fmt.Printf("time value is: %s\n", value)
 		timeVal, err := parseTimeValue(value)
 		if err != nil {
 			return fmt.Errorf("cannot parse %q as time.Time: %w", value, err)
