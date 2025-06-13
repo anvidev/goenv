@@ -41,11 +41,13 @@ type tagConfig struct {
 // Example:
 //
 //	type DatabaseConfig struct {
-//		Host     string `goenv:"DB_HOST"`
-//		Port     int    `goenv:"DB_PORT"`
-//		Username string `goenv:"DB_USER"`
-//		Password string `goenv:"DB_PASS"`
-//		SSL      bool   `goenv:"DB_SSL"`
+//		Host     	 string 	   `goenv:"DB_HOST"`
+//		Port     	 int    	   `goenv:"DB_PORT"`
+//		Username 	 string 	   `goenv:"DB_USER"`
+//		Password 	 string 	   `goenv:"DB_PASS"`
+//		SSL      	 bool   	   `goenv:"DB_SSL,default=false"`
+//		QueryTimeout time.Duration `goenv:"DB_QUERY_TIMEOUT,default=5s"`
+//		CreatedAt    time.Time     `goenv:"DB_CREATED_AT,default=2025-06-13"`
 //	}
 //
 //	var dbConfig DatabaseConfig
