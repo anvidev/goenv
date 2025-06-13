@@ -137,15 +137,6 @@ func parseTag(tag string) (tagConfig, error) {
 }
 
 func setFieldValue(field reflect.Value, value string) error {
-	if field.Type() == reflect.TypeOf(time.Time{}) {
-		timeVal, err := parseTimeValue(value)
-		if err != nil {
-			return fmt.Errorf("cannot parse %q as time.Time: %w", value, err)
-		}
-		field.Set(reflect.ValueOf(timeVal))
-		return nil
-	}
-
 	switch field.Interface().(type) {
 	case string:
 		field.SetString(value)
@@ -179,6 +170,13 @@ func setFieldValue(field reflect.Value, value string) error {
 			return fmt.Errorf("cannot parse %q as time.Duration: %w", value, err)
 		}
 		field.Set(reflect.ValueOf(durVal))
+	case time.Time:
+		timeVal, err := parseTimeValue(value)
+		if err != nil {
+			return fmt.Errorf("cannot parse %q as time.Time: %w", value, err)
+		}
+		field.Set(reflect.ValueOf(timeVal))
+		return nil
 	default:
 		return fmt.Errorf("unsupported field type: %s", field.Kind())
 	}
