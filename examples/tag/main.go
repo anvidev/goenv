@@ -15,14 +15,14 @@ type serverConfig struct {
 }
 
 type apiConfig struct {
-	Port         int        `goenv:"API_PORT"`
+	Port         int           `goenv:"API_PORT,default=8080"`
 	ReadTimeout  time.Duration `goenv:"API_READ_TIMEOUT"`
 	WriteTimeout time.Duration `goenv:"API_WRITE_TIMEOUT"`
 }
 
 type databaseConfig struct {
-	Name       string `goenv:"DB_NAME"`
-	ConnString string `goenv:"DB_CONN_STRING"`
+	Name       string `goenv:"DB_NAME,required"`
+	ConnString string `goenv:"DB_CONN_STRING,required"`
 }
 
 func main() {
