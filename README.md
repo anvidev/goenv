@@ -15,8 +15,12 @@ go get github.com/anvidev/goenv
 - `Duration(key string, fallback time.Duration) time.Duration` - Get duration with fallback
 - `MustString(key string) string` - Get required string (panics if empty/unset)
 - `Struct(v any) error` - Populate a struct using `goenv` struct tags
+- `Load(filenames ...string) error` - Loads 1 or more files in the environment. If no file is provided ".env" is used.
 
-## Usage
+## Basic Usage
+
+> [!NOTE]
+> Make sure to load your environment variables. See section [Loading environment variables](#loading-environment-variables) for more.
 
 Using the primitives.
 
@@ -34,7 +38,7 @@ func main() {
     port := goenv.Int("PORT", 8080)
     debug := goenv.Bool("DEBUG", false)
     timeout := goenv.Duration("TIMEOUT", 30*time.Second)
-    
+
     // Required variable (panics if not set)
     apiKey := goenv.MustString("API_KEY")
 }
@@ -108,6 +112,50 @@ Supported field types:
 |----------|----------------------------------------------------------------------|
 | default  | Sets the field value to default if environment variable is not found |
 | required | Returns an error if environment variable is not found                |
+
+## Loading environment variables
+
+To load your environment variables, simply place the following code in your main function.
+
+```go
+
+package main
+
+import (
+    // imports
+
+    "github.com/anvidev/goenv"
+
+    // more imports
+)
+
+func main() {
+    err := goenv.Load()
+    if err != nil {
+        // handle error
+    }
+
+    // your code goes here
+}
+
+```
+
+> [!CAUTION]
+> Running `Load` multiple times with different files might override values for duplicate keys
+
+`Load` will by default try to load ".env".
+
+However you can also provide file path(s) to `Load`, to load multiple files or from a specific location.
+
+The code would then look like this:
+
+```go
+    err := goenv.Load("path/to/environment")
+    if err != nil {
+        // handle error
+    }
+```
+
 
 ## License
 
