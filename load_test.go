@@ -49,7 +49,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:  "Load two files",
-			files: []string{".env.development", ".env.ci"},
+			files: []string{"testdata/.env.development", "testdata/.env.ci"},
 			expected: map[string]string{
 				"APP_ENV":             "development",
 				"DEBUG":               "true",
@@ -69,7 +69,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:  "Load three files",
-			files: []string{".env.development", ".env.staging", ".env.ci"},
+			files: []string{"testdata/.env.development", "testdata/.env.staging", "testdata/.env.ci"},
 			expected: map[string]string{
 				"APP_ENV":             "development",
 				"DEBUG":               "true",
@@ -92,7 +92,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:  "Load four files",
-			files: []string{".env.development", ".env.test", ".env.staging", ".env.ci"},
+			files: []string{"testdata/.env.development", "testdata/.env.test", "testdata/.env.staging", "testdata/.env.ci"},
 			expected: map[string]string{
 				"APP_ENV":             "development",
 				"DEBUG":               "true",
@@ -118,7 +118,7 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:  "Load five files",
-			files: []string{".env", ".env.development", ".env.test", ".env.staging", ".env.ci"},
+			files: []string{".env", "testdata/.env.development", "testdata/.env.test", "testdata/.env.staging", "testdata/.env.ci"},
 			expected: map[string]string{
 				"APP_ENV":             "production",
 				"DEBUG":               "false",
@@ -144,21 +144,21 @@ func TestLoad(t *testing.T) {
 		},
 		{
 			name:          "Load non existing file",
-			files:         []string{".env.missing"},
+			files:         []string{"testdata/.env.missing"},
 			shouldFail:    true,
-			expectedError: fmt.Errorf("goenv: Failed to load file '.env.missing': open .env.missing: no such file or directory"),
+			expectedError: fmt.Errorf("goenv: Failed to load file 'testdata/.env.missing': open testdata/.env.missing: no such file or directory"),
 		},
 		{
 			name:          "Load file with missing '='",
-			files:         []string{".env.missing.delim"},
+			files:         []string{"testdata/.env.missing.delim"},
 			shouldFail:    true,
-			expectedError: fmt.Errorf("goenv: Failed to load file '.env.missing.delim': malformed line: Missing '=' in environment variable"),
+			expectedError: fmt.Errorf("goenv: Failed to load file 'testdata/.env.missing.delim': malformed line: Missing '=' in environment variable"),
 		},
 		{
 			name:          "Load file with malformed string",
-			files:         []string{".env.malformed"},
+			files:         []string{"testdata/.env.malformed"},
 			shouldFail:    true,
-			expectedError: fmt.Errorf("goenv: Failed to load file '.env.malformed': malformed value: Missing end quote '\"' in environment variable"),
+			expectedError: fmt.Errorf("goenv: Failed to load file 'testdata/.env.malformed': malformed value: Missing end quote '\"' in environment variable"),
 		},
 	}
 
