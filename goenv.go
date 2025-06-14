@@ -11,7 +11,7 @@ import (
 // String retrives the value of environment variable `k`. If no value is found, then the fallback value is returned.
 func String(k, f string) string {
 	v, found := os.LookupEnv(k)
-	if !found {
+	if !found || v == "" {
 		return f
 	}
 	return v

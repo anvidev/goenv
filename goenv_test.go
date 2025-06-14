@@ -57,7 +57,7 @@ func TestString(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.set {
-				os.Setenv(tt.k, tt.want)
+				os.Setenv(tt.k, tt.v)
 				t.Cleanup(func() { os.Unsetenv(tt.k) })
 			}
 			got := String(tt.k, tt.f)
