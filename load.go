@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"slices"
 	"strings"
 )
 
@@ -35,12 +34,14 @@ func loadFile(filename string, overload bool) error {
 	}
 
 	curEnv := os.Environ()
-	for key, value := range fileMap {
-		exists := slices.ContainsFunc(curEnv, func(val string) bool {
-			curKey := strings.Split(val, "=")[0]
-			return curKey == key
-		})
+	curEnvMap := make(map[string]bool)
+	for _, val := range curEnv {
+		curKey := strings.Split(val, "=")[0]
+		curEnvMap[curKey] = true
+	}
 
+	for key, value := range fileMap {
+		exists := curEnvMap[key]
 		if !exists || overload {
 			os.Setenv(key, value)
 		}
