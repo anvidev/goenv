@@ -91,7 +91,7 @@ func Struct(v any) error {
 		}
 
 		value, found := os.LookupEnv(tagConfig.key)
-		if !found {
+		if !found || value == "" {
 			if tagConfig.required {
 				return fmt.Errorf("goenv - error on field %s: missing required env var", fieldName)
 			} else if tagConfig.hasDefault {

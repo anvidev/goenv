@@ -12,6 +12,8 @@ var keys []string = []string{"TEST_STRING", "TEST_INT", "TEST_BOOL", "TEST_EXIST
 	"TEST_UINT", "TEST_FLOAT32", "TEST_FLOAT64", "TEST_INVALID_INT",
 	"TEST_BOOL_1", "TEST_BOOL_0", "TEST_BOOL_TRUE", "TEST_BOOL_FALSE",
 	"TEST_EMPTY", "LEVEL1_VAR", "LEVEL2_VAR", "LEVEL3_VAR", "TEST_DURATION", "TEST_TIME", "TEST_MISSING_DEFAULT",
+	"SERVER_VERSION", "SERVER_ENV", "SERVER_ADDR", "SERVER_READ_TIMEOUT", "SERVER_WRITE_TIMEOUT", "SERVER_IDLE_TIMEOUT",
+	"AUTH_TOKEN", "DATABASE_URL", "MAILER_API_KEY",
 }
 
 func TestStruct(t *testing.T) {
@@ -338,6 +340,90 @@ func TestStruct(t *testing.T) {
 				}
 				if s.Level1.Level2.Level3.Var != "level3" {
 					t.Errorf("Level1.Level2.Level3.Var = %v, want %v", s.Level1.Level2.Level3.Var, "level3")
+				}
+			},
+		},
+		{
+			name: "Complex config struct",
+			setup: func() {
+				os.Setenv("SERVER_VERSION", "")
+				os.Setenv("SERVER_ENV", "")
+				os.Setenv("SERVER_ADDR", "")
+				os.Setenv("SERVER_READ_TIMEOUT", "")
+				os.Setenv("SERVER_WRITE_TIMEOUT", "")
+				os.Setenv("SERVER_IDLE_TIMEOUT", "")
+				os.Setenv("AUTH_TOKEN", "abc123")
+				os.Setenv("DATABASE_URL", "file://database.db")
+				os.Setenv("MAILER_API_KEY", "foobarbaz")
+			},
+			input: &struct {
+				Server struct {
+					Version      string        `goenv:"SERVER_VERSION,default=v0.1.0"`
+					Env          string        `goenv:"SERVER_ENV,default=development"`
+					Addr         string        `goenv:"SERVER_ADDR,default=:9090"`
+					ReadTimeout  time.Duration `goenv:"SERVER_READ_TIMEOUT,default=10s"`
+					WriteTimeout time.Duration `goenv:"SERVER_WRITE_TIMEOUT,default=30s"`
+					IdleTimeout  time.Duration `goenv:"SERVER_IDLE_TIMEOUT,default=1m"`
+				}
+				Database struct {
+					Token string `goenv:"AUTH_TOKEN,required"`
+					URL   string `goenv:"DATABASE_URL,required"`
+				}
+				Mailer struct {
+					From   string `goenv:"MAILER_FROM,default=Appname <noreply@appname.com>"`
+					ApiKey string `goenv:"MAILER_API_KEY,required"`
+				}
+			}{},
+			fail: false,
+			check: func(t *testing.T, input any) {
+				s := input.(*struct {
+					Server struct {
+						Version      string        `goenv:"SERVER_VERSION,default=v0.1.0"`
+						Env          string        `goenv:"SERVER_ENV,default=development"`
+						Addr         string        `goenv:"SERVER_ADDR,default=:9090"`
+						ReadTimeout  time.Duration `goenv:"SERVER_READ_TIMEOUT,default=10s"`
+						WriteTimeout time.Duration `goenv:"SERVER_WRITE_TIMEOUT,default=30s"`
+						IdleTimeout  time.Duration `goenv:"SERVER_IDLE_TIMEOUT,default=1m"`
+					}
+					Database struct {
+						Token string `goenv:"AUTH_TOKEN,required"`
+						URL   string `goenv:"DATABASE_URL,required"`
+					}
+					Mailer struct {
+						From   string `goenv:"MAILER_FROM,default=Appname <noreply@appname.com>"`
+						ApiKey string `goenv:"MAILER_API_KEY,required"`
+					}
+				})
+
+				if s.Server.Version != "v0.1.0" {
+					t.Errorf("Server.Version = %v, want %v", s.Server.Version, "v0.1.0")
+				}
+				if s.Server.Env != "development" {
+					t.Errorf("Server.Env = %v, want %v", s.Server.Env, "development")
+				}
+				if s.Server.Addr != ":9090" {
+					t.Errorf("Server.Addr = %v, want %v", s.Server.Addr, ":9090")
+				}
+				if s.Server.ReadTimeout != 10*time.Second {
+					t.Errorf("Server.ReadTimeout = %v, want %v", s.Server.ReadTimeout, 10*time.Second)
+				}
+				if s.Server.WriteTimeout != 30*time.Second {
+					t.Errorf("Server.WriteTimeout = %v, want %v", s.Server.WriteTimeout, 30*time.Second)
+				}
+				if s.Server.IdleTimeout != 60*time.Second {
+					t.Errorf("Server.IdleTimeout = %v, want %v", s.Server.IdleTimeout, 60*time.Second)
+				}
+				if s.Database.Token != "abc123" {
+					t.Errorf("Database.Token = %v, want %v", s.Database.Token, "abc123")
+				}
+				if s.Database.URL != "file://database.db" {
+					t.Errorf("Database.Token = %v, want %v", s.Database.URL, "file://database.db")
+				}
+				if s.Mailer.From != "Appname <noreply@appname.com>" {
+					t.Errorf("Database.From = %v, want %v", s.Mailer.From, "Appname <noreply@appname.com>")
+				}
+				if s.Mailer.ApiKey != "foobarbaz" {
+					t.Errorf("Database.ApiKey = %v, want %v", s.Mailer.ApiKey, "foobarbaz")
 				}
 			},
 		},
