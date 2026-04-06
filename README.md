@@ -11,6 +11,7 @@ go get github.com/anvidev/goenv
 
 - `String(key, fallback string) string` - Get string with fallback
 - `Int(key string, fallback int) int` - Get integer with fallback  
+- `Float(key string, fallback int) int` - Get float64 with fallback  
 - `Bool(key string, fallback bool) bool` - Get boolean with fallback
 - `Duration(key string, fallback time.Duration) time.Duration` - Get duration with fallback
 - `MustString(key string) string` - Get required string (panics if empty/unset)

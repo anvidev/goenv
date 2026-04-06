@@ -337,3 +337,74 @@ func TestBool(t *testing.T) {
 		})
 	}
 }
+
+func TestFloat(t *testing.T) {
+	tests := []struct {
+		name string
+		k    string
+		f    float64
+		v    string
+		set  bool
+		want float64
+	}{
+		{
+			name: "Get a variable that is set to 42.69",
+			k:    "TEST_SET_KEY",
+			f:    -1.,
+			v:    "42.69",
+			set:  true,
+			want: 42.69,
+		},
+		{
+			name: "Get a variable that is empty",
+			k:    "TEST_EMPTY_KEY",
+			f:    100.00,
+			v:    "",
+			set:  true,
+			want: 100.,
+		},
+		{
+			name: "Get a variable that is not set",
+			k:    "TEST_UNSET_KEY",
+			f:    -1.,
+			v:    "",
+			set:  false,
+			want: -1.,
+		}, {
+			name: "Get a variable with negative float",
+			k:    "TEST_NEGATIVE_KEY",
+			f:    100.,
+			v:    "-50.",
+			set:  true,
+			want: -50.,
+		},
+		{
+			name: "Get a variable with non-float value",
+			k:    "TEST_NON_INTEGER_KEY",
+			f:    100,
+			v:    "abc",
+			set:  true,
+			want: 100,
+		},
+		{
+			name: "Get a variable with very large float",
+			k:    "TEST_LARGE_INT_KEY",
+			f:    100,
+			v:    "999999999999999999.99",
+			set:  true,
+			want: 999999999999999999.99,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.set {
+				os.Setenv(tt.k, tt.v)
+				t.Cleanup(func() { os.Unsetenv(tt.k) })
+			}
+			got := Float(tt.k, tt.f)
+			if got != tt.want {
+				t.Errorf("Float() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

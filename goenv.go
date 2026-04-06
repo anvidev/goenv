@@ -60,6 +60,24 @@ func Bool(k string, f bool) bool {
 	return b
 }
 
+// Float retrieves the value of environment variable `k`.
+//
+// If the variable is present, the value is parsed into type `float64`.
+// Value will be convertible to float32 without changing its value.
+//
+// If the variable is not present, then the fallback is returned.
+func Float(k string, f float64) float64 {
+	v, found := os.LookupEnv(k)
+	if !found {
+		return f
+	}
+	float, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return f
+	}
+	return float
+}
+
 // MustString retrives the value of environment variable `k`. If no value is found, then the program panics.
 func MustString(k string) string {
 	v := String(k, "")
