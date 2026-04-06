@@ -78,7 +78,7 @@ func Float(k string, f float64) float64 {
 	return float
 }
 
-// MustString retrives the value of environment variable `k`. If no value is found, then the program panics.
+// MustString retreives the value of environment variable `k`. If no value is found, then the program panics.
 func MustString(k string) string {
 	v := String(k, "")
 	if v == "" {
